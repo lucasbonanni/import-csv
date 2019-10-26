@@ -27,45 +27,41 @@ export class CsvImportComponent implements OnInit {
         const csvRecordsArray = csvData.split(/\r\n|\n/);
         //Validate record array has items
         const headersRow = this.getHeaderArray(csvRecordsArray);
-        console.log(headersRow);
 
-        this.records = this.getDataRecordsArrayFromCSVFile(headersRow, csvRecordsArray, headersRow.length);
+        this.records.concat(this.getDataRecordsArrayFromCSVFile(headersRow, csvRecordsArray, headersRow.length));
       };
       reader.onerror =  () => console.error('error is occured while reading file!');
     } else {
       console.warn('Please import valid .csv file.');
       this.fileReset();
     }
-    console.log(this.records);
   }
   getDataRecordsArrayFromCSVFile(headersRow: string[], csvRecordsArray: string[], length: number): any[] {
     const dataArray: any[] = [];
-    csvRecordsArray.forEach(element => {
-      dataArray.push(this.getObjectData(headersRow, element));
-    });
+    for (let i = 1; i < csvRecordsArray.length; i++) {
+      dataArray.push(this.getObjectData(headersRow, csvRecordsArray[i]));
+    }
     return dataArray;
   }
   getObjectData(headersRow: string[], row: string): any {
     const obj: any = {};
     const values = row.match(/(".*?"|[^",]+)(?=,)*/g);
     for (let index = 0; index < headersRow.length; index++) {
-      // console.log(headersRow);
       obj[`${this.formatPropertiesNames(headersRow[index])}`] = this.formatValue(values[index]);
     }
-    console.log(obj);
     return obj;
   }
 
-  private formatValue(value: string): any {
-    const val = value.replace(/['"]+/g, '').trimLeft();
-    if (val.includes('$')) {
-
+  private formatValue(value: string): string {
+    let val = '';
+    if(value){
+      val = value.replace(/['"]+/g, '').trimLeft();
     }
     return val;
   }
 
   formatPropertiesNames(arg0: string): string {
-    const words = arg0.trimLeft().split(' ');
+    const words = arg0.trimLeft().replace(/['"]+/g, '').split(' ');
     let outputName = '';
     if (words.length === 1) {
       outputName = words[0].toLowerCase();
@@ -74,11 +70,11 @@ export class CsvImportComponent implements OnInit {
         if (i === 0) {
           outputName = words[i].toLowerCase();
         } else {
-          outputName += words[i];
+          outputName += words[i].charAt(0).toUpperCase() + words[i].slice(1);
         }
       }
     }
-    return outputName;
+    return outputName.trimLeft().replace(/[\xF3]/g, 'o');
   }
 
 
